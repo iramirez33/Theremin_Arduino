@@ -1,5 +1,3 @@
-# Theremin_Arduino
-
 /*                                                                                                                                                                                                                                                
  1 - Arduino pin ~9
  2 - Speaker +
