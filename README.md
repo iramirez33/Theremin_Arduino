@@ -1,98 +1,43 @@
-# Theremin_Arduino
+#define MIN_DISTANCIA 30
 
-/*                                                                                                                                                                                                                                                
- 1 - Arduino pin ~9
- 2 - Speaker +
- 3 - GND
-   4 - 5V
- 5 - Arduino pin ~10
- 6 - Arduino pin 13
- 7 - Arduino pin ~11 
-   8 - GND
-*/
+/* https://www.luisllamas.es/reproducir-sonidos-arduino-buzzer-pasivo-altavoz/ */
 
-#include   <NewTone.h>
-#include <NewPing.h>
-#include <SPI.h>
-
-#define MIN_DISTANCE   35 
-
-NewPing sonar(5, 6, 35); 
-
-
-byte   address = 0x00;
-int CS= 10;
-
-int echo = 3;                            
-int   trigger = 4;
-
-int distance;
-int PotValue;
-
-unsigned long TimeResponse;
-float   distance2;
-float tone1;
+int echo = 9;     // Pin para echo                          
+int trigger = 10; // Pin para trigger                               
+int speaker = 11; // Pin para el buzzer
+unsigned long tiempoRespuesta;
+unsigned long distancia;
+float freqRad;
+int tono;
 
 void setup() {
-  Serial.begin(9600);   
+  pinMode(speaker, OUTPUT);                  
   pinMode(trigger, OUTPUT);                     
-  pinMode(echo,   INPUT);   
-  pinMode (CS, OUTPUT);
-  SPI.begin();
+  pinMode(echo, INPUT);
 
-   
-  digitalPotWrite(255);
-   
-  for (int i = 50; i <= 400; i++)
-  {
-    pinMode(9, OUTPUT);
-    NewTone(9,i);
-     delay(10);
-  }
-  
-  delay(500);
-  
-  for (int i = 400; i >= 50;   i--)
-  {
-    pinMode(9, OUTPUT);
-    NewTone(9,i);
-    delay(10);
-   } 
-}
+                      
+  //Begin Serial communication at a baudrate of 9600:
+  Serial.begin(9600);
+ } 
 
-void loop() {  
-  digitalWrite(trigger, HIGH);           
-   delayMicroseconds(10);     
-   digitalWrite(trigger, LOW);                   
-  TimeResponse = pulseIn(echo,   HIGH);  
-  distance2   = TimeResponse/58;  
+void loop() {
+  digitalWrite(trigger, HIGH);            // Enviamos pulso de 10 microsegundos
+  delayMicroseconds(10);                        
+  digitalWrite(trigger, LOW);                   
+  tiempoRespuesta = pulseIn(echo, HIGH);  // Y esperamos pulso de vuelta
+  distancia = tiempoRespuesta/58;         // Calculo de distancia en cm
 
-  if (distance2   < MIN_DISTANCE) {  
-     tone1 = 50.0*pow(2,(distance2/12.0));  
-    pinMode(9, OUTPUT);
-    NewTone(9,tone1);
-  } else {
-     pinMode(9, OUTPUT); 
-    NewTone(9,0);
-  }
- 
-  distance = sonar.ping_cm(); 
+
+  if (distancia < MIN_DISTANCIA) {
+    freqRad = sin(distancia*(3.14/180)); // Pasamos frecuencia a radianes
+    tono = 2000+(int(freqRad*1000));     // calculamos el tono        
+    tone(speaker, tono, 500);
+  } 
 
   
-  int PotValue = map(distance, 0, 35, 240, 255);   
+  // Print the distance on the Serial Monitor (Ctrl+Shift+M):
+  Serial.print("Distance = ");
+  Serial.print(distancia);
+  Serial.println(" cm");
 
-  if (distance == 0)
-  {
-    PotValue   = 255;
-  }
-
-  digitalPotWrite(PotValue);
-  delay(10);  
-}
-
-int   digitalPotWrite(int value) {
-  digitalWrite(CS, LOW); 
-  SPI.transfer(address);
-   SPI.transfer(value);
-  digitalWrite(CS, HIGH);
 }
