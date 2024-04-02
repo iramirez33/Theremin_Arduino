@@ -1,29 +1,41 @@
-#define MIN_DISTANCIA 30
+#define MIN_DISTANCIA 50
 #define FRECUENCIA_ADDED 500
 
 /* https://www.luisllamas.es/reproducir-sonidos-arduino-buzzer-pasivo-altavoz/ */
 
-int echoSensor1 = 9; // Pin para echo
-int triggerSensor1 = 10; // Pin para trigger
-int speaker = 11; // Pin para el buzzer unsigned long tiempoRespuesta; unsigned long distancia; float freqRad; int tono;
+int echoSensor1 = 11; // Pin para echo
+int triggerSensor1 = 12; // Pin para trigger
+int speaker1 = 13; // Pin para el buzzer unsigned long tiempoRespuesta; unsigned long distancia; float freqRad; int tono;
 
 
-int echoSensor2 = 5; // Pin para echo
-int triggerSensor2 = 4; // Pin para trigger
+int echoSensor2 = 8; // Pin para echo
+int triggerSensor2 = 7; // Pin para trigger
+int speaker2 = 9;
+
 int tonoSensor1;
 int tonoSensor2;
-int distanciaSensor1;
-int distanciaSensor2;
-int tiempoRespuestaSensor1;
-int tiempoRespuestaSensor2;
+unsigned long distanciaSensor1;
+unsigned long distanciaSensor2;
+unsigned long tiempoRespuestaSensor1;
+unsigned long tiempoRespuestaSensor2;
 float freqRadSensor1;
 float freqRadSensor2;
 
+/*Tarjeta sd*/
+
+int cs = 6;
+int sck = 5;
+int mosi = 4;
+int miso = 3;
+int vcc = 2;
+
 
 void setup() { 
-  pinMode(speaker, OUTPUT);
+  pinMode(speaker1, OUTPUT);
   pinMode(triggerSensor1, OUTPUT);
   pinMode(echoSensor1, INPUT);
+
+  pinMode(speaker2, OUTPUT);
   pinMode(triggerSensor2, OUTPUT);
   pinMode(echoSensor2, INPUT);
 
@@ -44,7 +56,10 @@ void loop() {
     freqRadSensor1 = sin(distanciaSensor1*(3.14/180)); // Pasamos frecuencia a radianes 
     tonoSensor1 = (int(freqRadSensor1*1000)); // calculamos el tono
     // tone(speaker, tonoSensor1); 
+    tone(speaker1, tonoSensor1+FRECUENCIA_ADDED); 
 
+  } else {
+    noTone(speaker1);  
   }
 
   // SENSOR2
@@ -58,9 +73,13 @@ void loop() {
     freqRadSensor2 = sin(distanciaSensor2*(3.14/180)); // Pasamos frecuencia a radianes 
     tonoSensor2 = (int(freqRadSensor2*1000)); // calculamos el tono
     // tone(speaker, tonoSensor2); 
+    tone(speaker2, tonoSensor2+FRECUENCIA_ADDED); 
+
+  } else {
+    noTone(speaker2);  
   }
 
-  tone(speaker, tonoSensor1+tonoSensor2+FRECUENCIA_ADDED); 
+  
 
   // Print the distance on the Serial Monitor (Ctrl+Shift+M): 
   Serial.print("DistanceSensor1 = "); 
