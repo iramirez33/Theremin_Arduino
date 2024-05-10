@@ -14,15 +14,11 @@ int echoSensor2 = 8; // Pin para echo
 int triggerSensor2 = 7; // Pin para trigger
 int speaker2 = 9;
 
-int interruptor = 2;
+int interruptorA = 4;
+int interruptorB = 5;
 
-/*Tarjeta sd*/
-
-int cs = 6;
-int sck = 5;
-int mosi = 4;
-int miso = 3;
-
+boolean iA = false;
+boolean iB = false;
 
 int tonoSensor1;
 int tonoSensor2;
@@ -33,10 +29,10 @@ unsigned long tiempoRespuestaSensor2;
 float freqRadSensor1;
 float freqRadSensor2;
 
-File fileS1;
-File fileS2;
+int FRECUENCIA_CALCULADA;
 
-bool recording = false;
+int SUMAR = 1000;
+int RESTAR = -500;
 
 void setup() { 
   pinMode(speaker1, OUTPUT);
@@ -46,32 +42,22 @@ void setup() {
   pinMode(speaker2, OUTPUT);
   pinMode(triggerSensor2, OUTPUT);
   pinMode(echoSensor2, INPUT);
-
-  pinMode(interruptor, INPUT);
-
+  pinMode(interruptorA, INPUT_PULLUP);
+  pinMode(interruptorB, INPUT_PULLUP);
 
   // Begin Serial communication at a baudrate of 9600: 
   Serial.begin(9600); 
 
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
-
-  Serial.print("Initializing SD card...");
-
-  if (!SD.begin(cs)) {
-    Serial.println("initialization failed!");
-    while (1);
-  }
-  Serial.println("initialization done.");
-
-  fileS1 = SD.open("S1.txt", FILE_WRITE);
-  fileS2 = SD.open("S2.txt", FILE_WRITE);
-
-
+  FRECUENCIA_CALCULADA = FRECUENCIA_ADDED;
 }
 
 void loop() { 
+
+  if (digitalRead(interruptorA) == HIGH) iA = true;
+  else iA = false;
+
+  if (digitalRead(interruptorB) == HIGH) iB = true;
+  else iB = false;
 
   // SENSOR1
   digitalWrite(triggerSensor1, HIGH); // Enviamos pulso de 10 microsegundos delayMicroseconds(10);
@@ -83,8 +69,12 @@ void loop() {
   if (distanciaSensor1 < MIN_DISTANCIA) { 
     freqRadSensor1 = sin(distanciaSensor1*(3.14/180)); // Pasamos frecuencia a radianes 
     tonoSensor1 = (int(freqRadSensor1*1000)); // calculamos el tono
-    // tone(speaker, tonoSensor1); 
-    tone(speaker1, tonoSensor1+FRECUENCIA_ADDED); 
+    // tone(speaker, tonoSensor1);
+
+    FRECUENCIA_CALCULADA = FRECUENCIA_ADDED + (iA ? SUMAR : 0) + (iB ? RESTAR : 0);
+
+    
+    tone(speaker1, tonoSensor1+FRECUENCIA_CALCULADA); 
 
   } else {
     noTone(speaker1);  
@@ -101,7 +91,10 @@ void loop() {
     freqRadSensor2 = sin(distanciaSensor2*(3.14/180)); // Pasamos frecuencia a radianes 
     tonoSensor2 = (int(freqRadSensor2*1000)); // calculamos el tono
     // tone(speaker, tonoSensor2); 
-    tone(speaker2, tonoSensor2+FRECUENCIA_ADDED); 
+
+    FRECUENCIA_CALCULADA = FRECUENCIA_ADDED + (iA ? SUMAR : 0) + (iB ? RESTAR : 0);
+
+    tone(speaker2, tonoSensor2+FRECUENCIA_CALCULADA); 
 
   } else {
     noTone(speaker2);  
@@ -124,6 +117,11 @@ void loop() {
 
   Serial.print("TonoSensor2 = "); 
   Serial.print(tonoSensor2); 
+  Serial.println(" Hz");
+
+
+  Serial.print("CALCULADA = "); 
+  Serial.print(FRECUENCIA_CALCULADA); 
   Serial.println(" Hz");
 
 }
